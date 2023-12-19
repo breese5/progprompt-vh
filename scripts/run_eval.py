@@ -16,6 +16,7 @@ for the VirtualHome environment tasks
 
 import sys
 sys.path.append("virtualhome/simulation")
+sys.path.append("virtualhome/simulation/unity_simulator")
 sys.path.append("virtualhome/demo")
 sys.path.append("virtualhome")
 
@@ -89,7 +90,7 @@ def planner_executer(args):
 
     # initialize env
     comm = UnityCommunication(file_name=args.unity_filename, 
-                              port=args.port, 
+                              #port=args.port, 
                               x_display=args.display)
     
     # prompt example environment is set to env_id 0
@@ -161,8 +162,8 @@ def planner_executer(args):
         with open(f"{args.progprompt_path}/data/new_env/{args.test_set}_annotated.json", 'r') as f:
             for line in f.readlines():
                 test_tasks.append(list(json.loads(line).keys())[0])
-        log_file.write(f"\n----Test set tasks----\n{test_tasks}\nTotal: {len(test_tasks)} tasks\n")
-
+        # log_file.write(f"\n----Test set tasks----\n{test_tasks}\nTotal: {len(test_tasks)} tasks\n")
+    #prompt = prompt + "\n#Solve this method step by step"
     # setup logging
     log_filename = f"{args.expt_name}_{args.prompt_task_examples}_{args.prompt_num_examples}examples"
     if args.prompt_task_examples_ablation != "none":
@@ -182,7 +183,7 @@ def planner_executer(args):
         log_file.write(f"\n----Test set tasks----\n{test_tasks}\nTotal: {len(test_tasks)} tasks\n")
 
     # test_tasks = test_tasks[:3] ## debug to check changes
-
+    args.load_generated_plans = False
     # generate plans for the test set
     if not args.load_generated_plans:
         gen_plan = []
@@ -197,8 +198,8 @@ def planner_executer(args):
                         frequency_penalty=0.15)
             gen_plan.append(text)
             # because codex has query limit per min
-            if args.gpt_version == 'code-davinci-002':
-                time.sleep(90)
+            # if args.gpt_version == 'code-davinci-002' or args.gpt_version == 'davinci' or args.gpt_version == 'text-davinci-002' or :
+            # time.sleep(19)
 
         # save generated plan
         line = {}
@@ -257,12 +258,12 @@ if __name__ == "__main__":
     parser.add_argument("--openai-api-key", type=str, 
                         default="sk-xyz")
     parser.add_argument("--unity-filename", type=str, 
-                        default="/path/to/macos_exec.v2.3.0.app")
+                        default="virtualhome/virtualhome/simulation/unity_simulator/macos_exec.v2.3.0.app")
     parser.add_argument("--port", type=str, default="8000")
     parser.add_argument("--display", type=str, default="0")
     
-    parser.add_argument("--gpt-version", type=str, default="text-davinci-002", 
-                        choices=['text-davinci-002', 'davinci', 'code-davinci-002'])
+    parser.add_argument("--gpt-version", type=str, default="babbage-002", 
+                        choices=['gpt-3.5-turbo-instruct', 'davinci-002', 'babbage-002'])
     parser.add_argument("--env-id", type=int, default=0)
     parser.add_argument("--test-set", type=str, default="test_unseen", 
                         choices=['test_unseen', 'test_seen', 'test_unseen_ambiguous', 'env1', 'env2'])
@@ -280,7 +281,7 @@ if __name__ == "__main__":
     parser.add_argument("--prompt-task-examples-ablation", type=str, default="none", 
                          choices=['none', 'no_comments', "no_feedback", "no_comments_feedback"])
 
-    parser.add_argument("--load-generated-plans", type=bool, default=False)
+    parser.add_argument("--load-generated-plans", type=bool, default = True)
     
     args = parser.parse_args()
     openai.api_key = args.openai_api_key
